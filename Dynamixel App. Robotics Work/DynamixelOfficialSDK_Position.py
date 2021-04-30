@@ -54,7 +54,7 @@ DXL_ID                      = 4
 
 # Use the actual port assigned to the U2D2.
 # ex) Windows: "COM*", Linux: "/dev/ttyUSB*", Mac: "/dev/tty.usbserial-*"
-DEVICENAME                  = '/dev/cu.usbserial-FT3WHPY9'
+DEVICENAME                  = 'COM5' # Change port depending on motor controller
 
 TORQUE_ENABLE               = 1     # Value for enabling the torque
 TORQUE_DISABLE              = 0     # Value for disabling the torque
