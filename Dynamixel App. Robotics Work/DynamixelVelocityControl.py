@@ -36,6 +36,8 @@ else:
         return ch
 
 from dynamixel_sdk import *  # Uses Dynamixel SDK library
+from turns import *
+import requests
 
 # ********* DYNAMIXEL Model definition *********
 # ***** (Use only one definition at a time) *****
@@ -58,7 +60,6 @@ EXT_POS = 4
 PWM_CONTR = 16
 
 GOAL_VEL_ADDR = 104
-GOAL_VEL = 265
 
 # Control table address
 if MY_DXL == 'X_SERIES' or MY_DXL == 'MX_SERIES':
@@ -78,7 +79,7 @@ DXL_IDs = getIDs()
 
 # Use the actual port assigned to the U2D2.
 # ex) Windows: "COM*", Linux: "/dev/ttyUSB*", Mac: "/dev/tty.usbserial-*"
-DEVICENAME = 'COM5'  # Change port depending on motor controller Ex. 'COM5' or '/dev/tty.usbserial-FT3WHPY9'
+DEVICENAME = '/dev/tty.usbserial-FT3WHPY9'  # Change port depending on motor controller Ex. 'COM5' or '/dev/tty.usbserial-FT3WHPY9'
 
 TORQUE_ENABLE = 1  # Value for enabling the torque
 TORQUE_DISABLE = 0  # Value for disabling the torque
@@ -100,7 +101,7 @@ packetHandler = PacketHandler(PROTOCOL_VERSION)
 def setMode():
     for element in DXL_IDs:
         packetHandler.write1ByteTxRx(portHandler, element, MODE_SET_ADDR, VEL_MODE)
-    print("Velocity mode set")
+        print(f"Velocity mode set for Motor with ID #{element}")
 
 
 # Open port
@@ -133,19 +134,35 @@ for element in DXL_IDs:
     else:
         print(f"Dynamixel motor with ID #{element} has been successfully connected")
 
+def getSensorVals():
+    r = requests.get('https://google.com')
+    return r.json()
+
+def runMotors(sensorVals):
+    # if statements to determine which kind of turn to make goes here
+    print(sensorVals)
+    GOAL_VELs = calcVelocities(DXL_IDs) # dummy values for actual velocity list that real calc() functions will return
+    i = 0
+    for element in DXL_IDs:
+        dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, element, GOAL_VEL_ADDR, GOAL_VELs[i])
+        i += 1
+        if dxl_comm_result != COMM_SUCCESS:
+            print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
+        elif dxl_error != 0:
+            print("%s" % packetHandler.getRxPacketError(dxl_error))
+
 while True:
     print("Press any key to continue! (or press ESC to quit!)")
     if getch() == chr(0x1b):
-        dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, DXL_IDs[0], GOAL_VEL_ADDR, 0)
+        for element in DXL_IDs:
+            dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, element, GOAL_VEL_ADDR, 0)
+            print(f"Motor with ID #{element} has gone to sleep") 
         break
+    sensorVals = getSensorVals() # json object with sensor vals
+    runMotors(sensorVals)
 
-    # Write goal position
-    dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, DXL_IDs[0], GOAL_VEL_ADDR, GOAL_VEL)
-    if dxl_comm_result != COMM_SUCCESS:
-        print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
-    elif dxl_error != 0:
-        print("%s" % packetHandler.getRxPacketError(dxl_error))
-
+"""
+Position function: Don't need to get position for now
     for i in range(1):
         # Read present position
         dxl_present_position, dxl_comm_result, dxl_error = packetHandler.read4ByteTxRx(portHandler, DXL_IDs[0],
@@ -158,13 +175,15 @@ while True:
         if not abs(dxl_goal_position[index] - dxl_present_position) > DXL_MOVING_STATUS_THRESHOLD:
             break
     print("[ID:%03d] GoalPos:%03d  PresPos:%03d" % (DXL_IDs[0], dxl_goal_position[index], dxl_present_position))
+"""
 
 # Disable Dynamixel Torque
-dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, DXL_IDs[0], ADDR_TORQUE_ENABLE, TORQUE_DISABLE)
-if dxl_comm_result != COMM_SUCCESS:
-    print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
-elif dxl_error != 0:
-    print("%s" % packetHandler.getRxPacketError(dxl_error))
+for element in DXL_IDs:
+    dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, element, ADDR_TORQUE_ENABLE, TORQUE_DISABLE)
+    if dxl_comm_result != COMM_SUCCESS:
+        print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
+    elif dxl_error != 0:
+        print("%s" % packetHandler.getRxPacketError(dxl_error))
 
 # Close port
 portHandler.closePort()
