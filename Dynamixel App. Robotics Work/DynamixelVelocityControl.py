@@ -135,8 +135,9 @@ for element in DXL_IDs:
         print(f"Dynamixel motor with ID #{element} has been successfully connected")
 
 def getSensorVals():
+    pass
     r = requests.get('https://google.com')
-    return r.json()
+    return r.text  # or use 'return r.json()' depending on if values are in json format
 
 def runMotors(sensorVals):
     # if statements to determine which kind of turn to make goes here
