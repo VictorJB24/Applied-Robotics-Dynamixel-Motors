@@ -79,7 +79,7 @@ DXL_IDs = getIDs()
 
 # Use the actual port assigned to the U2D2.
 # ex) Windows: "COM*", Linux: "/dev/ttyUSB*", Mac: "/dev/tty.usbserial-*"
-DEVICENAME = '/dev/tty.usbserial-FT3WHPY9'  # Change port depending on motor controller Ex. 'COM5' or '/dev/tty.usbserial-FT3WHPY9'
+DEVICENAME = ‘/dev/dynamixel/’  # There is a symlink to ‘/dev/dynamixel/’ on RasPi, but change it to : 'COM5' or '/dev/tty.usbserial-FT3WHPY9' when not on RasPi
 
 TORQUE_ENABLE = 1  # Value for enabling the torque
 TORQUE_DISABLE = 0  # Value for disabling the torque
