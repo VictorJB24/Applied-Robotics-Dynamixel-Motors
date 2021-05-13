@@ -14,6 +14,9 @@
 
 import os
 
+"""
+ Getch function breaks on Raspberry Pi; unusable
+
 if os.name == 'nt':
     import msvcrt
 
@@ -34,6 +37,7 @@ else:
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         return ch
+"""
 
 from dynamixel_sdk import *  # Uses Dynamixel SDK library
 from turns import *
@@ -79,7 +83,7 @@ DXL_IDs = getIDs()
 
 # Use the actual port assigned to the U2D2.
 # ex) Windows: "COM*", Linux: "/dev/ttyUSB*", Mac: "/dev/tty.usbserial-*"
-DEVICENAME = ‘/dev/dynamixel/’  # There is a symlink to ‘/dev/dynamixel/’ on RasPi, but change it to : 'COM5' or '/dev/tty.usbserial-FT3WHPY9' when not on RasPi
+DEVICENAME = "COM5"  # There is a symlink to ‘/dev/dynamixel/’ on RasPi, but change it to : 'COM5' or '/dev/tty.usbserial-FT3WHPY9' when not on RasPi
 
 TORQUE_ENABLE = 1  # Value for enabling the torque
 TORQUE_DISABLE = 0  # Value for disabling the torque
@@ -98,6 +102,7 @@ portHandler = PortHandler(DEVICENAME)
 # Get methods and members of Protocol1PacketHandler or Protocol2PacketHandler
 packetHandler = PacketHandler(PROTOCOL_VERSION)
 
+
 def setMode():
     for element in DXL_IDs:
         packetHandler.write1ByteTxRx(portHandler, element, MODE_SET_ADDR, VEL_MODE)
@@ -110,7 +115,6 @@ if portHandler.openPort():
 else:
     print("Failed to open the port")
     print("Press any key to terminate...")
-    getch()
     quit()
 
 # Set port baudrate
@@ -119,7 +123,6 @@ if portHandler.setBaudRate(BAUDRATE):
 else:
     print("Failed to change the baudrate")
     print("Press any key to terminate...")
-    getch()
     quit()
 
 setMode()
@@ -129,37 +132,43 @@ for element in DXL_IDs:
     dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, element, ADDR_TORQUE_ENABLE, TORQUE_ENABLE)
     if dxl_comm_result != COMM_SUCCESS:
         print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
+        quit()
     elif dxl_error != 0:
         print("%s" % packetHandler.getRxPacketError(dxl_error))
+        quit()
     else:
         print(f"Dynamixel motor with ID #{element} has been successfully connected")
+
 
 def getSensorVals():
     pass
     r = requests.get('https://google.com')
     return r.text  # or use 'return r.json()' depending on if values are in json format
 
+
 def runMotors(sensorVals):
     # if statements to determine which kind of turn to make goes here
     print(sensorVals)
-    GOAL_VELs = calcVelocities(DXL_IDs) # dummy values for actual velocity list that real calc() functions will return
+    GOAL_VELs = calcVelocities(DXL_IDs)  # dummy values for actual velocity list that real calc() functions will return
     i = 0
     for element in DXL_IDs:
         dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, element, GOAL_VEL_ADDR, GOAL_VELs[i])
         i += 1
         if dxl_comm_result != COMM_SUCCESS:
             print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
+            quit()
         elif dxl_error != 0:
             print("%s" % packetHandler.getRxPacketError(dxl_error))
+            quit()
+
 
 while True:
-    print("Press any key to continue! (or press ESC to quit!)")
-    if getch() == chr(0x1b):
+    if "q" in input("Press any key to continue! (or enter 'q' to quit!)"):
         for element in DXL_IDs:
             dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, element, GOAL_VEL_ADDR, 0)
-            print(f"Motor with ID #{element} has gone to sleep") 
+            print(f"Motor with ID #{element} has gone to sleep")
         break
-    sensorVals = getSensorVals() # json object with sensor vals
+    sensorVals = getSensorVals()  # json object with sensor vals
     runMotors(sensorVals)
 
 """
