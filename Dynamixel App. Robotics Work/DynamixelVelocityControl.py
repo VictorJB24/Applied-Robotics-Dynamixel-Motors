@@ -1,3 +1,4 @@
+
 # *******************************************************************************
 # ***********************     Read and Write Example      ***********************
 #  Required Environment to run this example :
@@ -16,20 +17,14 @@ import os
 
 """
  Getch function breaks on Raspberry Pi; unusable
-
 if os.name == 'nt':
     import msvcrt
-
-
     def getch():
         return msvcrt.getch().decode()
 else:
     import sys, tty, termios
-
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
-
-
     def getch():
         try:
             tty.setraw(sys.stdin.fileno())
@@ -39,9 +34,11 @@ else:
         return ch
 """
 
+from sys import platform
 from dynamixel_sdk import *  # Uses Dynamixel SDK library
 from turns import *
 import requests
+
 
 # ********* DYNAMIXEL Model definition *********
 # ***** (Use only one definition at a time) *****
@@ -83,7 +80,20 @@ DXL_IDs = getIDs()
 
 # Use the actual port assigned to the U2D2.
 # ex) Windows: "COM*", Linux: "/dev/ttyUSB*", Mac: "/dev/tty.usbserial-*"
-DEVICENAME = "COM5"  # There is a symlink to ‘/dev/dynamixel/’ on RasPi, but change it to : 'COM5' or '/dev/tty.usbserial-FT3WHPY9' when not on RasPi
+def getDeviceName():
+    DEVICENAME = "/dev/ttyUSB0"
+    if platform == "linux" or platform == "linux2":  # Checking for OS type
+        DEVICENAME = "/dev/ttyUSB0"  # There is a symlink to ‘/dev/dynamixel/’ on RasPi, but change it to : 'COM5' or '/dev/tty.usbserial-FT3WHPY9' when not on RasPi
+    elif platform == "darwin":
+        DEVICENAME = "/dev/tty.usbserial-FT3WHPY9"
+    elif platform == "win32":
+        DEVICENAME = "COM5"
+    return DEVICENAME
+
+
+DEVICENAME = getDeviceName()
+
+print(DEVICENAME)
 
 TORQUE_ENABLE = 1  # Value for enabling the torque
 TORQUE_DISABLE = 0  # Value for disabling the torque
@@ -181,7 +191,6 @@ Position function: Don't need to get position for now
             print("%s" % packetHandler.getTxRxResult(dxl_comm_result))
         elif dxl_error != 0:
             print("%s" % packetHandler.getRxPacketError(dxl_error))
-
         if not abs(dxl_goal_position[index] - dxl_present_position) > DXL_MOVING_STATUS_THRESHOLD:
             break
     print("[ID:%03d] GoalPos:%03d  PresPos:%03d" % (DXL_IDs[0], dxl_goal_position[index], dxl_present_position))
