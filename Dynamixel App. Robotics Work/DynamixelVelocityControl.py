@@ -81,13 +81,17 @@ DXL_IDs = getIDs()
 # Use the actual port assigned to the U2D2.
 # ex) Windows: "COM*", Linux: "/dev/ttyUSB*", Mac: "/dev/tty.usbserial-*"
 def getDeviceName():
+    print("In getDeviceName()")
     DEVICENAME = "/dev/ttyUSB0"
-    if platform == "linux" or platform == "linux2":  # Checking for OS type
+    if platform.system() == "Linux" or platform.system() == "Linux2":  # Checking for OS type
         DEVICENAME = "/dev/ttyUSB0"  # There is a symlink to ‘/dev/dynamixel/’ on RasPi, but change it to : 'COM5' or '/dev/tty.usbserial-FT3WHPY9' when not on RasPi
-    elif platform == "darwin":
+        print("Linux")
+    elif platform.system() == "Darwin":
         DEVICENAME = "/dev/tty.usbserial-FT3WHPY9"
-    elif platform == "win32":
+        print("Mac")
+    elif platform.system() == "Windows":
         DEVICENAME = "COM5"
+        print("Windows")
     return DEVICENAME
 
 
@@ -152,17 +156,17 @@ for element in DXL_IDs:
 
 def getSensorVals():
     pass
-    r = requests.get('https://google.com')
+    r = requests.get('https://linkhs.herokuapp.com/search?location=remote')
     return r.text  # or use 'return r.json()' depending on if values are in json format
 
 
 def runMotors(sensorVals):
     # if statements to determine which kind of turn to make goes here
-    print(sensorVals)
-    GOAL_VELs = calcVelocities(DXL_IDs)  # dummy values for actual velocity list that real calc() functions will return
+    GOAL_VELs = calcVelocities(DXL_IDs, sensorVals)  # dummy values for actual velocity list that real calc() functions will return
     i = 0
     for element in DXL_IDs:
         dxl_comm_result, dxl_error = packetHandler.write4ByteTxRx(portHandler, element, GOAL_VEL_ADDR, GOAL_VELs[i])
+        print(GOAL_VELs[i])
         i += 1
         if dxl_comm_result != COMM_SUCCESS:
             print("%s" % packetHandler.getTxRxResult(dxl_comm_result))

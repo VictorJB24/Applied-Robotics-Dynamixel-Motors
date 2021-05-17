@@ -36,23 +36,29 @@ When sensor(s) to right of middle sensor see black:
 
 def calcVelocities(IDs, sensorVals):  #  sensorVals = list of all seven sensor values
     print("In calcVelocities()")
+    print("Sensor Vals: \n", sensorVals)
     velocities = []
     for element in IDs:
         velocity = input(f"Input your velocity for motor with ID #{element}: ")
         velocities.append(int(velocity))
         
-    if sensorVals[3] > 0:  # sensor vals is black
+    if sensorVals[3] == 0:  # sensor vals is black
         return goForward(sensorVals)
     
-    else:
-        if sensorVal[2] > 0:  # if left side sensor reads black
-            return leftTurn()
+    elif sensorVals[2] == 0:  # if left side sensor reads black
+        return leftTurn()
+
+    elif sensorVals[4] == 0:  # if right side sensor reads black
+        return rightTurn()
     
     def goForward(sensorVals):
         return [265, 265, 265, 265]
     
-    def leftTurn()
+    def leftTurn():
         return [100, 100, 265, 265]
+
+    def rightTurn():
+        return [265, 265, 100, 100]
     
     def pointTurn(sensorVals):
         #  write function to calculate motor speeds for point turn based on sensor values
