@@ -1,0 +1,12 @@
+{
+  "ports":[ "COM5" ],
+  "baudrate": "auto",
+  "protocol versions": "auto",
+  "motors":[
+    {
+      "id": 4,
+      "alias": "joint_4",
+      "model": "XL430-W250"
+    }
+  ]
+}
